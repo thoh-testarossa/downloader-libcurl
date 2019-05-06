@@ -1,0 +1,6 @@
+build/
+data/
+*.code-workspace
+.vscode
+.idea
+.DS_Store

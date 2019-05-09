@@ -9,5 +9,6 @@ add_library(downloader
         downloader-libcurl.h
         downloader-libcurl.cpp)
 
+
 target_link_libraries(downloader
         ${CURL_LIBRARIES})

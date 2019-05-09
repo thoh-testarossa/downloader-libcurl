@@ -8,6 +8,9 @@
 #include <future>
 #include <iostream>
 #include <fstream>
+#include <algorithm>
+#include <cstdlib>
+#include <cstring>
 
 int Downloader_libcurl::isInit = 0;
 

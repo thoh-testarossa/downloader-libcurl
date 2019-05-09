@@ -6,4 +6,5 @@ add_executable(downloader_libcurl_test
         ../downloader/downloader-libcurl.h)
 
 target_link_libraries(downloader_libcurl_test
-        downloader)
+        downloader
+        pthread)

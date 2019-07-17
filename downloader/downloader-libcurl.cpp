@@ -64,7 +64,7 @@ std::pair<std::string, std::string> Downloader_libcurl::download(const std::stri
 
     auto fileName = this->getFileNameFromURL(downloadURL);
 
-    ret.first = path + fileName;
+    ret.first = fileName;
     ret.second = std::string();
 
     //curl environment setup

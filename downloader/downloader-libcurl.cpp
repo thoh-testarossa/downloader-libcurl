@@ -21,6 +21,7 @@ Downloader_libcurl::Downloader_libcurl()
     Downloader_libcurl::isInit++;
 
     this->downloadURLSet = std::vector<std::string>();
+    this->downloadedFileSet = std::vector<std::pair<std::string, std::string>>();
 }
 
 Downloader_libcurl::~Downloader_libcurl()
@@ -30,26 +31,34 @@ Downloader_libcurl::~Downloader_libcurl()
         curl_global_cleanup();
 
     this->downloadURLSet.clear();
+    this->downloadedFileSet.clear();
 }
 
-void Downloader_libcurl::downloadAll(int asyncNum, const std::string &path)
+void Downloader_libcurl::downloadAll(int asyncNum, const std::string &path, bool neededWriteBack)
 {
-    auto asyncTaskSet = std::vector<std::future<void>>();
+    auto asyncTaskSet = std::vector<std::future<std::vector<std::pair<std::string, std::string>>>>();
 
     for(int i = 0; i < asyncNum; i++)
-        asyncTaskSet.emplace_back(std::async(&Downloader_libcurl::downloadAsyncTask, this, i, asyncNum, path));
+        asyncTaskSet.emplace_back(std::async(&Downloader_libcurl::downloadAsyncTask, this, i, asyncNum, path, neededWriteBack));
 
     for(int i = 0; i < asyncNum; i++)
-        asyncTaskSet.at(i).get();
+    {
+        auto tempResult = asyncTaskSet.at(i).get();
+        for(auto p : tempResult) this->downloadedFileSet.emplace_back(p);
+    }
 }
 
-void Downloader_libcurl::downloadAsyncTask(int asyncNo, int asyncNum, const std::string &path)
+std::vector<std::pair<std::string, std::string>> Downloader_libcurl::downloadAsyncTask(int asyncNo, int asyncNum, const std::string &path, bool neededWriteBack)
 {
+    auto ret = std::vector<std::pair<std::string, std::string>>();
+
     for(int i = asyncNo; i < this->downloadURLSet.size(); i += asyncNum)
-        this->download(this->downloadURLSet.at(i), path);
+        ret.emplace_back(this->download(this->downloadURLSet.at(i), path, neededWriteBack));
+
+    return ret;
 }
 
-void Downloader_libcurl::download(const std::string &downloadURL, const std::string &path)
+std::pair<std::string, std::string> Downloader_libcurl::download(const std::string &downloadURL, const std::string &path, bool neededWriteBack)
 {
     auto ret = std::pair<std::string, std::string>();
 
@@ -112,9 +121,12 @@ void Downloader_libcurl::download(const std::string &downloadURL, const std::str
             for(int i = 0; i < buf->realSize; i++) ret.second += buf->memBlock[i];
             needTry = false;
 
-            std::ofstream fout(path + ret.first, std::ios::out | std::ios::binary);
-            if(fout.is_open()) fout.write(ret.second.c_str(), ret.second.length());
-            fout.close();
+            if(neededWriteBack)
+            {
+                std::ofstream fout(path + ret.first, std::ios::out | std::ios::binary);
+                if (fout.is_open()) fout.write(ret.second.c_str(), ret.second.length());
+                fout.close();
+            }
         }
 
         //temporary storage release
@@ -123,6 +135,9 @@ void Downloader_libcurl::download(const std::string &downloadURL, const std::str
 
     //curl exit
     curl_easy_cleanup(curl);
+
+    //return
+    return ret;
 }
 
 std::string Downloader_libcurl::getFileNameFromURL(const std::string &downloadURL)

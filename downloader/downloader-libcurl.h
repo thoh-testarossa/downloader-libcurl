@@ -25,15 +25,17 @@ public:
     Downloader_libcurl();
     ~Downloader_libcurl();
 
-    void downloadAll(int asyncNum, const std::string &path);
+    void downloadAll(int asyncNum, const std::string &path, bool neededWriteBack);
 
     std::string getFileNameFromURL(const std::string &downloadURL);
 
     std::vector<std::string> downloadURLSet;
 
+    std::vector<std::pair<std::string, std::string>> downloadedFileSet;
+
 protected:
-    void downloadAsyncTask(int asyncNo, int asyncNum, const std::string &path);
-    void download(const std::string &downloadURL, const std::string &path);
+    std::vector<std::pair<std::string, std::string>> downloadAsyncTask(int asyncNo, int asyncNum, const std::string &path, bool neededWriteBack);
+    std::pair<std::string, std::string> download(const std::string &downloadURL, const std::string &path, bool neededWriteBack);
 
     //This function is used to fit the form of curl-write function
     static size_t fetchDownloadedData(char *ptr, size_t size, size_t nmemb, void *stream);

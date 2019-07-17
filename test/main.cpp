@@ -24,9 +24,18 @@ int main()
 
     fin.close();
 
+    std::string path = std::string("./");
+
     Downloader_libcurl d = Downloader_libcurl();
     d.downloadURLSet = downloadURL;
-    d.downloadAll(defaultAsyncNum, "./");
+    d.downloadAll(defaultAsyncNum, path, true);
+
+    for(const auto &p : d.downloadedFileSet)
+    {
+        std::ofstream fout(path + p.first, std::ios::out | std::ios::binary);
+        if (fout.is_open()) fout.write(p.second.c_str(), p.second.length());
+        fout.close();
+    }
 
     return 0;
 }
